@@ -10,7 +10,7 @@ In this project, you will build a word frequency counter backed by a custom sing
 ### Phase 1: Data Structuring & Frequency Accumulation
 * **`WordCount.java`**:
   * Implement constructors and field accessors/mutators.
-  * Implement `equals(Object obj)` using the mandatory 3-step check (see details below).
+  * Implement `equals(Object obj)` using the mandatory 3-step check.
   * Implement `compareTo(WordCount other)` with primary and secondary sorting rules.
 * **`WordCountList.java`**:
   * `find(String target)`: Traverses nodes to find a matching word (case-insensitive).
@@ -80,3 +80,16 @@ Compile and run `WordCountTester.java` to verify all phases:
 javac LLNode.java WordCount.java WordCountList.java WordCountTester.java
 java WordCountTester
 ```
+
+---
+
+## 💡 Algorithmic Reflection & Discussion Questions
+
+### 1. The Insertion Strategy Paradox (Head vs. Tail)
+* **Observation:** When building your `WordCountList` from *Hamlet*, notice the elapsed time for **List Construction**.
+* **Question:** In English literature, a few words (like `"the"`, `"and"`, `"to"`) appear thousands of times (Zipf's Law). If your `add()` method inserts new unique words at the **head** (`head = new LLNode<>(..., head)`), where do those high-frequency common words end up as more unique words are added?
+* **Analysis:** How does node placement affect the depth of future `find()` traversals for common words? How would appending to the **tail** or using a "Move-To-Front" heuristic change list construction time?
+
+### 2. Runtime Benchmarks ($O(n^2)$ vs. $O(n \log n)$)
+* Compare the elapsed execution time of `rankNaive()` vs. `rank()` (MergeSort) on *Hamlet.txt* (~4,789 unique words).
+* How does the time difference scale when analyzing larger texts like *HuckFinn.txt* or *WarAndPeace.txt*?
