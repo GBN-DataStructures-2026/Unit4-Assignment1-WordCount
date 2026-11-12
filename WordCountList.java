@@ -2,12 +2,10 @@
  * Singly-linked list implementation dedicated to tracking WordCount elements.
  */
 public class WordCountList {
-    protected LLNode<WordCount> head;
-    protected int size;
+    // TODO instance variables (one or more list pointers, size)
 
     public WordCountList() {
-        this.head = null;
-        this.size = 0;
+        // TODO default constructor.  Initialize instance variables.
     }
 
     public int size() {
