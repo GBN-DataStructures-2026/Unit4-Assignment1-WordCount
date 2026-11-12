@@ -104,15 +104,15 @@ public class WordCountList {
         return null;
     }
 
-    @Override
+@Override
     public String toString() {
+        if (size() == 0) return "EMPTY";
         StringBuilder sb = new StringBuilder();
-        LLNode<WordCount> curr = head;
-        while (curr != null) {
-            sb.append(curr.getInfo().toString());
-            if (curr.getLink() != null) sb.append(" -> ");
-            curr = curr.getLink();
+        for (int i = 0; i < size(); i++) {
+            WordCount wc = get(i);
+            sb.append(wc != null ? wc.toString() : "null");
+            if (i < size() - 1) sb.append(" -> ");
         }
-        return sb.length() == 0 ? "EMPTY" : sb.toString();
+        return sb.toString();
     }
 }
