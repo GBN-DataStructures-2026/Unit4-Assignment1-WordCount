@@ -64,7 +64,8 @@ public class WordCountList {
      * Public interface to run O(n log n) MergeSort on the list.
      */
     public void rank() {
-        head = mergeSortRec(head);
+        // set the front variable  = mergeSortRec(front variable);
+        // this starts the process of the recursive merge sort
     }
 
     /**
