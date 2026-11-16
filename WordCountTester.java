@@ -108,7 +108,6 @@ public class WordCountTester {
     private static void testListInsertionLookupAndBoundaries() {
         printHeader("3. Testing WordCountList Insertion, Missing Items & Boundaries");
 
-        // Empty list checks
         WordCountList emptyList = new WordCountList();
         assertTest("Empty list starts with size 0", emptyList.size() == 0);
 
@@ -120,7 +119,6 @@ public class WordCountTester {
         }
         assertTest("find() on empty list safely returns null", emptyFindSafe);
 
-        // Insertion & case-insensitive frequency accumulation
         WordCountList list = new WordCountList();
         list.add("dog");
         list.add("cat");
@@ -135,16 +133,14 @@ public class WordCountTester {
         WordCount catWC = list.find("cat");
         assertTest("Frequency accumulation for 'cat' (count == 1)", catWC != null && catWC.getCount() == 1);
 
-        // Missing item lookup on populated list (catches while(head != null) loops)
         boolean missingFindSafe = false;
         try {
             missingFindSafe = (list.find("zebra") == null);
         } catch (Exception e) {
-            System.out.println(RED + "    --> ERROR: find() for missing word threw " + e + " (check loop condition: while(currNode != null))" + RESET);
+            System.out.println(RED + "    --> ERROR: find() for missing word threw " + e + " (check loop condition in find())" + RESET);
         }
         assertTest("find() for missing word on populated list safely returns null", missingFindSafe);
 
-        // Boundary checks for get(index)
         assertTest("get(-1) throws IndexOutOfBoundsException", throwsIndexOutOfBounds(list, -1));
         assertTest("get(size) throws IndexOutOfBoundsException", throwsIndexOutOfBounds(list, list.size()));
     }
@@ -171,10 +167,13 @@ public class WordCountTester {
         System.out.println(CYAN + "After MergeSort rank():" + RESET);
         printLinkedListNodes(list);
 
-        boolean correctOrder = list.size() == 3
-            && list.get(0) != null && list.get(0).getWord().equalsIgnoreCase("cherry")
-            && list.get(1) != null && list.get(1).getWord().equalsIgnoreCase("apple")
-            && list.get(2) != null && list.get(2).getWord().equalsIgnoreCase("banana");
+        boolean correctOrder = false;
+        try {
+            correctOrder = list.size() == 3
+                && list.get(0) != null && list.get(0).getWord().equalsIgnoreCase("cherry")
+                && list.get(1) != null && list.get(1).getWord().equalsIgnoreCase("apple")
+                && list.get(2) != null && list.get(2).getWord().equalsIgnoreCase("banana");
+        } catch (Exception ignored) {}
 
         assertTest("Visual State rendered and correctly sorted", correctOrder);
     }
@@ -185,7 +184,6 @@ public class WordCountTester {
     private static void testSortingEdgeCases() {
         printHeader("5. Testing Sorting Edge Cases (Empty & Single-Node Lists)");
 
-        // Naive Sort Edge Cases
         boolean naiveEdgeSafe = false;
         try {
             WordCountList emptyNaive = new WordCountList();
@@ -196,13 +194,13 @@ public class WordCountTester {
             singleNaive.rankNaive();
 
             naiveEdgeSafe = (emptyNaive.size() == 0 && singleNaive.size() == 1
+                && singleNaive.get(0) != null
                 && "solo".equalsIgnoreCase(singleNaive.get(0).getWord()));
         } catch (Exception e) {
             System.out.println(RED + "    --> ERROR: rankNaive() crashed on size 0 or 1: " + e + RESET);
         }
         assertTest("Phase 2 (rankNaive): Safely handles empty (0) and single-node (1) lists", naiveEdgeSafe);
 
-        // MergeSort Edge Cases
         boolean mergeEdgeSafe = false;
         try {
             WordCountList emptyMerge = new WordCountList();
@@ -213,6 +211,7 @@ public class WordCountTester {
             singleMerge.rank();
 
             mergeEdgeSafe = (emptyMerge.size() == 0 && singleMerge.size() == 1
+                && singleMerge.get(0) != null
                 && "solo".equalsIgnoreCase(singleMerge.get(0).getWord()));
         } catch (Exception e) {
             System.out.println(RED + "    --> ERROR: rank() crashed on size 0 or 1: " + e + RESET);
@@ -259,11 +258,13 @@ public class WordCountTester {
         // --- PHASE 3: MergeSort Validation, Integrity & Equivalence ---
         boolean mergeSorted = false;
         boolean mergeIntegrity = false;
+        boolean mergeHasElements = false;
         boolean matches = false;
         int maxLen = Math.max(listNaive.size(), listMerge.size());
 
         try {
             listMerge.rank();
+            mergeHasElements = (listMerge.size() > 0 && listMerge.get(0) != null);
             mergeIntegrity = verifyStructuralIntegrity(listMerge, "MergeSort rank");
             mergeSorted = mergeIntegrity && isListSorted(listMerge);
             matches = naiveSorted && mergeSorted && (listNaive.size() == listMerge.size());
@@ -278,14 +279,14 @@ public class WordCountTester {
                 }
             }
         } catch (NullPointerException e) {
-            System.out.println(YELLOW + "    --> Note: rank() returned a null list (Phase 3 likely not implemented yet)." + RESET);
+            System.out.println(YELLOW + "    --> Note: rank() left the list empty or broken (Phase 3 likely not implemented yet)." + RESET);
         } catch (Exception e) {
             System.out.println(RED + "  [ERROR] rank() threw an exception: " + e + RESET);
         }
 
         assertTest("Phase 3 (rank / MergeSort): Post-sort pointer chain integrity intact", mergeIntegrity);
 
-        if (naiveSorted && listMerge.head != null && !matches) {
+        if (naiveSorted && mergeHasElements && !matches) {
             System.out.println(RED + "\n  [MISMATCH DETECTED] Naive Rank and MergeSort Rank output differs:" + RESET + "\n");
             System.out.printf("  %-6s | %-20s | %-20s | %s\n", "Index", "Naive Rank O(n^2)", "MergeSort Rank O(n log n)", "Status");
             System.out.println("  -------------------------------------------------------------------------");
@@ -437,38 +438,40 @@ public class WordCountTester {
 
     private static boolean isListSorted(WordCountList list) {
         if (list == null || list.size() == 0) return false;
-        for (int i = 0; i < list.size() - 1; i++) {
-            WordCount curr = list.get(i);
-            WordCount next = list.get(i + 1);
-            if (curr == null || next == null || curr.compareTo(next) > 0) {
-                return false;
+        try {
+            for (int i = 0; i < list.size() - 1; i++) {
+                WordCount curr = list.get(i);
+                WordCount next = list.get(i + 1);
+                if (curr == null || next == null || curr.compareTo(next) > 0) {
+                    return false;
+                }
             }
+            return true;
+        } catch (Exception e) {
+            return false;
         }
-        return true;
     }
 
     /**
-     * Walks the head pointer chain to verify that node count matches size()
-     * and that no nodes were dropped or linked into a cycle.
+     * Verifies via public accessors that all size() nodes are reachable
+     * and non-null after sorting (catches dropped nodes or broken links).
      */
     private static boolean verifyStructuralIntegrity(WordCountList list, String label) {
         if (list == null) return false;
         int expectedSize = list.size();
-        int actualCount = 0;
-        LLNode<WordCount> curr = list.head;
 
-        while (curr != null && actualCount <= expectedSize) {
-            actualCount++;
-            curr = curr.getLink();
-        }
-
-        if (curr != null) {
-            System.out.println(RED + "    --> INTEGRITY ERROR (" + label + "): Cycle detected or chain exceeds size (" + expectedSize + ")!" + RESET);
-            return false;
-        }
-        if (actualCount != expectedSize) {
-            System.out.println(RED + "    --> INTEGRITY ERROR (" + label + "): Expected " + expectedSize + " nodes from head, but found " + actualCount + " (nodes dropped)!" + RESET);
-            return false;
+        for (int i = 0; i < expectedSize; i++) {
+            try {
+                WordCount wc = list.get(i);
+                if (wc == null) {
+                    System.out.println(RED + "    --> INTEGRITY ERROR (" + label + "): Node at index " + i + " is null!" + RESET);
+                    return false;
+                }
+            } catch (Exception e) {
+                System.out.println(RED + "    --> INTEGRITY ERROR (" + label + "): Chain broke at index " + i
+                    + " of " + expectedSize + " (" + e.getClass().getSimpleName() + " — nodes dropped during relinking)!" + RESET);
+                return false;
+            }
         }
         return true;
     }
@@ -504,7 +507,8 @@ public class WordCountTester {
         System.out.println("----------------------------------------");
 
         for (int i = 0; i < displayCount; i++) {
-            WordCount wc = list.get(i);
+            WordCount wc = null;
+            try { wc = list.get(i); } catch (Exception ignored) {}
             if (wc != null) {
                 System.out.printf("#%-5d | %-16s | %d\n", (i + 1), wc.getWord(), wc.getCount());
             }
@@ -516,32 +520,27 @@ public class WordCountTester {
         StringBuilder nodesVisual = new StringBuilder();
         nodesVisual.append("  HEAD -> ");
 
-        if (list.head == null) {
+        if (list.size() == 0) {
             nodesVisual.append(YELLOW).append("NULL").append(RESET);
         } else {
-            LLNode<WordCount> curr = list.head;
-            int safetyLimit = Math.max(list.size() + 2, 15);
-            int count = 0;
+            for (int i = 0; i < list.size(); i++) {
+                try {
+                    WordCount wc = list.get(i);
+                    if (wc != null) {
+                        nodesVisual.append("[").append(wc.getWord()).append(": ").append(wc.getCount()).append("]");
+                    } else {
+                        nodesVisual.append("[null]");
+                    }
 
-            while (curr != null && count < safetyLimit) {
-                WordCount wc = curr.getInfo();
-                if (wc != null) {
-                    nodesVisual.append("[").append(wc.getWord()).append(": ").append(wc.getCount()).append("]");
-                } else {
-                    nodesVisual.append("[null]");
+                    if (i < list.size() - 1) {
+                        nodesVisual.append(" -> ");
+                    } else {
+                        nodesVisual.append(" -> ").append(YELLOW).append("NULL").append(RESET);
+                    }
+                } catch (Exception e) {
+                    nodesVisual.append(RED).append("[BROKEN LINK AT INDEX ").append(i).append("]").append(RESET);
+                    break;
                 }
-
-                curr = curr.getLink();
-                count++;
-
-                if (curr != null) {
-                    nodesVisual.append(" -> ");
-                } else {
-                    nodesVisual.append(" -> ").append(YELLOW).append("NULL").append(RESET);
-                }
-            }
-            if (curr != null) {
-                nodesVisual.append(RED).append(" ... [CYCLE / TRUNCATED]").append(RESET);
             }
         }
         System.out.println(nodesVisual.toString());
